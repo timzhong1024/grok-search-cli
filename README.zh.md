@@ -34,16 +34,15 @@ grok-search doctor
 ~/.config/grok-search-cli/config.json
 ```
 
-打开这个文件，并按内置示例更新配置。默认的 xAI 官方配置如下：
+大多数情况下，你只需要填一个从 [xAI](https://x.ai/api) 获取的 API key：
 
 ```json
 {
-  "XAI_API_KEY": "your_xai_api_key",
-  "XAI_MODEL": "grok-4-1-fast-non-reasoning",
-  "XAI_BASE_URL": "",
-  "XAI_COMPAT_MODE": false
+  "XAI_API_KEY": "your_xai_api_key"
 }
 ```
+
+如果你使用的是非官方提供商，见下方的[配置方式](#配置方式)。
 
 然后执行查询：
 
@@ -130,29 +129,36 @@ grok-search skill > ~/.codex/skills/grok-search-cli/SKILL.md
 
 `process.env` 的优先级高于 `~/.config/grok-search-cli/config.json`，因此在临时覆盖配置时，优先使用 shell 环境变量。
 
-### xAI 官方
+默认情况下，CLI 会使用 xAI 官方地址和内置默认模型 `grok-4-1-fast-non-reasoning`。
+
+| 字段 | 是否必填 | 默认行为 | 什么时候可能要改 |
+| --- | --- | --- | --- |
+| `XAI_API_KEY` | 是 | 无默认值 | 所有场景都必须提供 |
+| `XAI_MODEL` | 否 | 使用 `grok-4-1-fast-non-reasoning` | 当你想切换到其他 Grok 模型时 |
+| `XAI_BASE_URL` | 否 | 使用 xAI 官方地址 | 当你要接 OpenRouter 或其他兼容网关时 |
+
+如果你想手动覆盖模型，可以这样写：
 
 ```json
 {
   "XAI_API_KEY": "your_xai_api_key",
-  "XAI_MODEL": "grok-4-1-fast-non-reasoning",
-  "XAI_BASE_URL": "",
-  "XAI_COMPAT_MODE": false
+  "XAI_MODEL": "grok-4-1-fast-non-reasoning"
 }
 ```
 
-### OpenRouter
+注意：不同服务商使用的 model id 不一定一样。xAI 官方、OpenRouter、以及其他兼容网关，通常都需要各自对应的模型名。切换服务商时，不要直接沿用原来的 model id。
+
+### OpenRouter 示例
 
 ```json
 {
   "XAI_API_KEY": "your_openrouter_api_key",
-  "XAI_MODEL": "x-ai/grok-4-fast:online",
-  "XAI_BASE_URL": "https://openrouter.ai/api/v1",
-  "XAI_COMPAT_MODE": false
+  "XAI_MODEL": "x-ai/grok-4.1-fast",
+  "XAI_BASE_URL": "https://openrouter.ai/api/v1"
 }
 ```
 
-### yunwu / 其他兼容代理站
+### 其他兼容网关示例
 
 ```json
 {
@@ -163,13 +169,23 @@ grok-search skill > ~/.codex/skills/grok-search-cli/SKILL.md
 }
 ```
 
+像 yunwu 这类兼容网关，通常需要设置 `XAI_COMPAT_MODE=true`。
+
 ## 服务选择建议
 
 推荐顺序：
 
 1. 优先使用 xAI 官方服务。这是 `web_search` 和 `x_search` 最直接、最稳定的路径。
-2. OpenRouter 也比较稳。它对 xAI 模型可以走原生 xAI 支持的 web search。
-3. 如果使用第三方代理站，需要自己确认搜索能力。很多代理站只暴露 `/chat/completions`，是否真的能搜索，取决于站点是否在内部为你开启了 web search。
+2. 如果不直连 xAI，优先用 OpenRouter。这是这里最稳的非官方选项。
+3. 第三方兼容网关，例如 yunwu，更适合作为兼容兜底。很多代理站只暴露 `/chat/completions`，是否真的能搜索，取决于站点是否在内部为你开启了 web search。
+
+推荐模型：
+
+| 服务商 | 推荐模型 | 说明 |
+| --- | --- | --- |
+| xAI 官方 | `grok-4-1-fast-non-reasoning` | 这是当前 CLI 的默认模型，也是 `web_search` 和 `x_search` 支持最完整的路径 |
+| OpenRouter | `x-ai/grok-4.1-fast` | 通过 OpenRouter 接入时，优先用这个 |
+| 其他兼容网关，例如 yunwu | 以网关实际支持的 model id 为准 | 比如 yunwu 示例里使用 `grok-4-fast` |
 
 ## 搜索模式
 
@@ -191,7 +207,7 @@ grok-search skill > ~/.codex/skills/grok-search-cli/SKILL.md
 
 ### 其他兼容网关
 
-当你通过其他 OpenAI-compatible 网关接入，并启用 `XAI_COMPAT_MODE=true` 时使用。
+当你通过其他 OpenAI-compatible 网关接入时使用。
 
 - 使用网关提供的兼容调用路径
 - 是否真的搜索、怎么搜索，由中转站决定

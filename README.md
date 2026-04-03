@@ -35,16 +35,15 @@ If no config exists yet, the CLI creates:
 ~/.config/grok-search-cli/config.json
 ```
 
-Update the generated config file using one of the bundled examples. The default xAI official config is:
+In most cases, you only need to set an API key from [xAI](https://x.ai/api):
 
 ```json
 {
-  "XAI_API_KEY": "your_xai_api_key",
-  "XAI_MODEL": "grok-4-1-fast-non-reasoning",
-  "XAI_BASE_URL": "",
-  "XAI_COMPAT_MODE": false
+  "XAI_API_KEY": "your_xai_api_key"
 }
 ```
+
+If you are using a non-official provider, see [Configuration](#configuration).
 
 Run a query:
 
@@ -131,29 +130,36 @@ grok-search skill > ~/.codex/skills/grok-search-cli/SKILL.md
 
 `process.env` takes priority over `~/.config/grok-search-cli/config.json`, so shell env is the easiest way to override config temporarily.
 
-### xAI Official
+By default, the CLI uses the official xAI endpoint and the built-in default model `grok-4-1-fast-non-reasoning`.
+
+| Field | Required | Default behavior | When you might override it |
+| --- | --- | --- | --- |
+| `XAI_API_KEY` | Yes | No default | Required in all cases |
+| `XAI_MODEL` | No | Uses `grok-4-1-fast-non-reasoning` | When you want a different Grok model |
+| `XAI_BASE_URL` | No | Uses the official xAI endpoint | When routing through OpenRouter or another compatible gateway |
+
+If you want to override the model:
 
 ```json
 {
   "XAI_API_KEY": "your_xai_api_key",
-  "XAI_MODEL": "grok-4-1-fast-non-reasoning",
-  "XAI_BASE_URL": "",
-  "XAI_COMPAT_MODE": false
+  "XAI_MODEL": "grok-4-1-fast-non-reasoning"
 }
 ```
 
-### OpenRouter
+Important: model IDs are provider-specific. The official xAI model ID, the OpenRouter model ID, and the model ID expected by another compatible gateway may not match. If you switch providers, check the provider's expected model name instead of reusing the previous one unchanged.
+
+### OpenRouter Example
 
 ```json
 {
   "XAI_API_KEY": "your_openrouter_api_key",
-  "XAI_MODEL": "x-ai/grok-4-fast:online",
-  "XAI_BASE_URL": "https://openrouter.ai/api/v1",
-  "XAI_COMPAT_MODE": false
+  "XAI_MODEL": "x-ai/grok-4.1-fast",
+  "XAI_BASE_URL": "https://openrouter.ai/api/v1"
 }
 ```
 
-### Yunwu / Other Compatible Gateways
+### Other Compatible Gateway Example
 
 ```json
 {
@@ -164,13 +170,23 @@ grok-search skill > ~/.codex/skills/grok-search-cli/SKILL.md
 }
 ```
 
+For gateways such as yunwu, set `XAI_COMPAT_MODE=true`.
+
 ## Provider Guide
 
 Recommended order:
 
 1. Use official xAI APIs when possible. This is the most direct and stable path for `web_search` and `x_search`.
-2. OpenRouter is also a solid option. It can use native xAI-backed web search for xAI models.
-3. If you use a third-party proxy, verify search support yourself. Many proxies only expose `/chat/completions`, and search only works if the proxy provider has enabled web search on their side.
+2. OpenRouter is the best fallback when you do not want to use xAI directly. It is the most predictable non-official option here.
+3. Third-party compatible gateways such as yunwu are a compatibility fallback. Verify search support yourself. Many proxies only expose `/chat/completions`, and search only works if the proxy provider has enabled web search on their side.
+
+Recommended model choices:
+
+| Provider | Recommended model | Why |
+| --- | --- | --- |
+| xAI official | `grok-4-1-fast-non-reasoning` | Default path in this CLI, best support for `web_search` and `x_search` |
+| OpenRouter | `x-ai/grok-4.1-fast` | Best default when routing through OpenRouter |
+| Other compatible gateways such as yunwu | Provider-specific | Use the model ID your gateway actually exposes, for example `grok-4-fast` on yunwu |
 
 ## Search Modes
 
@@ -192,7 +208,7 @@ Use this when `XAI_BASE_URL` points to `openrouter.ai`.
 
 ### Other Compatible Gateways
 
-Use this when you connect through another OpenAI-compatible gateway with `XAI_COMPAT_MODE=true`.
+Use this when you connect through another OpenAI-compatible gateway.
 
 - Uses the gateway's compatibility path
 - Search behavior depends on the gateway
