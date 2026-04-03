@@ -6,20 +6,36 @@ Expose xAI Web + X search as a single CLI for agents that can run shell commands
 
 ## Get Started
 
-You only need two things to get it running: install the package, then provide the required environment variables.
+You only need two things to get it running: install the package, then provide credentials.
 
 ```bash
 pnpm add -g grok-search-cli
 ```
 
-```env
-XAI_API_KEY=your_xai_api_key
-XAI_MODEL=grok-4-1-fast-non-reasoning
-# XAI_BASE_URL=https://your-proxy.example.com/v1 # optional proxy base URL
-# XAI_COMPAT_MODE=true # use OpenAI-compatible /chat/completions mode
+Run a quick health check:
+
+```bash
+grok-search doctor
 ```
 
-Run it:
+If no config exists yet, the CLI creates:
+
+```text
+~/.config/grok-search-cli/config.json
+```
+
+Edit that file and fill in one of the bundled examples. The default xAI official config looks like:
+
+```json
+{
+  "XAI_API_KEY": "your_xai_api_key",
+  "XAI_MODEL": "grok-4-1-fast-non-reasoning",
+  "XAI_BASE_URL": "",
+  "XAI_COMPAT_MODE": false
+}
+```
+
+Then run:
 
 ```bash
 grok-search "latest xAI updates"
@@ -28,10 +44,11 @@ grok-search "latest xAI updates"
 If you do not want a global install:
 
 ```bash
+npx grok-search-cli doctor
 npx grok-search-cli "latest xAI updates"
 ```
 
-Using OpenRouter:
+OpenRouter example:
 
 ```env
 XAI_API_KEY=your_openrouter_api_key
@@ -39,17 +56,26 @@ XAI_BASE_URL=https://openrouter.ai/api/v1
 XAI_MODEL=x-ai/grok-4-fast:online
 ```
 
-With OpenRouter, the CLI auto-enables compatibility mode for the OpenAI-style endpoint and forwards OpenRouter web-search fields.
+Yunwu example:
+
+```env
+XAI_API_KEY=your_yunwu_api_key
+XAI_BASE_URL=https://yunwu.ai/v1
+XAI_MODEL=grok-4-fast
+XAI_COMPAT_MODE=true
+```
+
+`process.env` takes priority over `~/.config/grok-search-cli/config.json`, so shell env is still the easiest way to override config temporarily.
 
 ## Use With Agents
 
 This repo ships with an installable skill:
 
 ```bash
-npx skills add <owner>/<repo> --skill grok-search-cli
+npx skills add timzhong1024/grok-search-cli --skill grok-search-cli
 ```
 
-For Codex, use it as a research-agent preset: `gpt-5.4-mini` with `low` reasoning. See [agents/codex.yaml](./agents/codex.yaml).
+For Codex, a matching preset is included at [agents/codex.yaml](./agents/codex.yaml).
 
 Trigger it with:
 
@@ -62,7 +88,7 @@ Spawn a grok-research researcher agent with gpt-5.4-mini and low reasoning, then
 Recommended order:
 
 1. Use official xAI APIs when possible. This is the most direct and stable path for `web_search` and `x_search`.
-2. OpenRouter is also a solid option. Its web plugin can use native xAI search for xAI models, including both Web Search and X Search.
+2. OpenRouter is also a solid option. It can use native xAI-backed web search for xAI models.
 3. If you use a third-party proxy, verify search support yourself. Many proxies only expose `/chat/completions`, and search only works if the proxy provider has enabled web search on their side.
 
 ## Two Modes
@@ -121,6 +147,10 @@ grok-search "latest xAI status on X" \
 
 ```bash
 grok-search "latest xAI updates" --json
+```
+
+```bash
+grok-search doctor
 ```
 
 ```bash

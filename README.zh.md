@@ -6,20 +6,36 @@
 
 ## 跑起来
 
-最小依赖只有两件事：装包，然后提供所需环境变量。
+最小依赖只有两件事：装包，然后提供凭证。
 
 ```bash
 pnpm add -g grok-search-cli
 ```
 
-```env
-XAI_API_KEY=your_xai_api_key
-XAI_MODEL=grok-4-1-fast-non-reasoning
-# XAI_BASE_URL=https://your-proxy.example.com/v1 # optional proxy base URL
-# XAI_COMPAT_MODE=true # use OpenAI-compatible /chat/completions mode
+先做一次健康检查：
+
+```bash
+grok-search doctor
 ```
 
-直接跑：
+如果本地还没有配置文件，CLI 会自动创建：
+
+```text
+~/.config/grok-search-cli/config.json
+```
+
+打开这个文件，按内置示例填一套即可。默认的 xAI 官方配置长这样：
+
+```json
+{
+  "XAI_API_KEY": "your_xai_api_key",
+  "XAI_MODEL": "grok-4-1-fast-non-reasoning",
+  "XAI_BASE_URL": "",
+  "XAI_COMPAT_MODE": false
+}
+```
+
+然后直接跑：
 
 ```bash
 grok-search "latest xAI updates"
@@ -28,6 +44,7 @@ grok-search "latest xAI updates"
 如果不想全局安装：
 
 ```bash
+npx grok-search-cli doctor
 npx grok-search-cli "latest xAI updates"
 ```
 
@@ -39,17 +56,26 @@ XAI_BASE_URL=https://openrouter.ai/api/v1
 XAI_MODEL=x-ai/grok-4-fast:online
 ```
 
-走 OpenRouter 时，CLI 会针对它的 OpenAI 风格接口自动开启兼容模式，并转发 OpenRouter 的 web search 字段。
+如果走 yunwu.ai，可以直接这样配：
+
+```env
+XAI_API_KEY=your_yunwu_api_key
+XAI_BASE_URL=https://yunwu.ai/v1
+XAI_MODEL=grok-4-fast
+XAI_COMPAT_MODE=true
+```
+
+`process.env` 的优先级高于 `~/.config/grok-search-cli/config.json`，所以临时覆盖配置时，直接在 shell 里传 env 就行。
 
 ## 给 Agent 用
 
 这个仓库自带一个可安装 skill：
 
 ```bash
-npx skills add <owner>/<repo> --skill grok-search-cli
+npx skills add timzhong1024/grok-search-cli --skill grok-search-cli
 ```
 
-如果是 Codex，推荐把它当成一个 research agent 约定来用：默认 `gpt-5.4-mini` + `low` reasoning，见 [agents/codex.yaml](./agents/codex.yaml)。
+如果是 Codex，仓库里还带了一份可配套使用的 preset，见 [agents/codex.yaml](./agents/codex.yaml)。
 
 可直接用这句触发：
 
@@ -62,7 +88,7 @@ Spawn a grok-research researcher agent with gpt-5.4-mini and low reasoning, then
 推荐顺序：
 
 1. 优先使用 xAI 官方服务。这是 `web_search` 和 `x_search` 最直接、最稳定的路径。
-2. OpenRouter 也比较稳。它的 web 插件对 xAI 模型可以走原生 xAI 搜索，包含 Web Search 和 X Search。
+2. OpenRouter 也比较稳。它对 xAI 模型可以走原生 xAI 支持的 web search。
 3. 如果使用第三方代理站，需要自己确认搜索能力。很多代理站只暴露 `/chat/completions`，是否真的能搜索，取决于站点是否在内部为你开启了 web search。
 
 ## 两种模式
@@ -121,6 +147,10 @@ grok-search "latest xAI status on X" \
 
 ```bash
 grok-search "latest xAI updates" --json
+```
+
+```bash
+grok-search doctor
 ```
 
 ```bash
