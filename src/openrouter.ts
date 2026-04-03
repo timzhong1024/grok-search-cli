@@ -1,3 +1,4 @@
+import pDefer from "p-defer";
 import type {
   CompletedResult,
   OpenRouterResponsesBody,
@@ -196,14 +197,7 @@ export async function streamOpenRouterResponses(params: {
 
   const decoder = new TextDecoder();
   let buffer = "";
-  let resolveFinalResponse: ((value: OpenRouterResponsesBody) => void) | undefined;
-  let rejectFinalResponse: ((reason?: unknown) => void) | undefined;
-  const finalResponsePromise = new Promise<OpenRouterResponsesBody>(
-    (resolve, reject) => {
-      resolveFinalResponse = resolve;
-      rejectFinalResponse = reject;
-    },
-  );
+  const finalResponse = pDefer<OpenRouterResponsesBody>();
   let sawCompletedEvent = false;
   const textStream = (async function* (): AsyncGenerator<string, void, unknown> {
     try {
@@ -227,7 +221,7 @@ export async function streamOpenRouterResponses(params: {
 
           if (event.type === "completed") {
             sawCompletedEvent = true;
-            resolveFinalResponse?.(event.response);
+            finalResponse.resolve(event.response);
             continue;
           }
 
@@ -238,16 +232,16 @@ export async function streamOpenRouterResponses(params: {
       }
 
       if (!sawCompletedEvent) {
-        rejectFinalResponse?.(
+        finalResponse.reject(
           new Error("OpenRouter stream ended before response.completed."),
         );
       }
     } catch (error) {
-      rejectFinalResponse?.(error);
+      finalResponse.reject(error);
       throw error;
     }
   })();
-  const finalResultPromise = finalResponsePromise.then(toCompletedResult);
+  const finalResultPromise = finalResponse.promise.then(toCompletedResult);
 
   return {
     textStream,

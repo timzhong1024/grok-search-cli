@@ -50,7 +50,8 @@
     "@ai-sdk/openai-compatible": "^2.0.38",
     "@ai-sdk/xai": "^3.0.77",
     "ai": "^6.0.145",
-    "conf": "^14.0.0"
+    "conf": "^14.0.0",
+    "p-defer": "^4.0.1"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.1",
