@@ -145,6 +145,8 @@ export async function streamPretty(params: {
       : undefined,
   };
 
-  process.stdout.write("\n");
-  printPretty(payload);
+  if (payload.verbose) {
+    process.stdout.write("\n");
+    printVerbose(payload.verbose);
+  }
 }

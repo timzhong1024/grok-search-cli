@@ -10,6 +10,22 @@ interface ProviderRuntimeConfig {
   baseUrl?: string;
 }
 
+function withStreamingUsage(body: Record<string, unknown>) {
+  if (body.stream !== true) {
+    return body;
+  }
+
+  return {
+    ...body,
+    stream_options: {
+      ...(typeof body.stream_options === "object" && body.stream_options != null
+        ? (body.stream_options as Record<string, unknown>)
+        : {}),
+      include_usage: true,
+    },
+  };
+}
+
 export function buildTools(options: SearchOptions): ToolSet {
   return {
     web_search: xai.tools.webSearch({
@@ -48,13 +64,21 @@ export function getCompletionProvider(
   options: SearchOptions,
 ) {
   const { baseUrl, apiKey } = runtimeConfig;
+  const openRouterTransform = isOpenRouterBaseUrl(baseUrl)
+    ? buildOpenRouterRequestTransform(options)
+    : undefined;
+
   return createOpenAICompatible({
     name: "compat",
     apiKey,
     baseURL: baseUrl || "https://api.x.ai/v1",
-    transformRequestBody: isOpenRouterBaseUrl(baseUrl)
-      ? buildOpenRouterRequestTransform(options)
-      : undefined,
+    transformRequestBody: (body) =>
+      withStreamingUsage(
+        (openRouterTransform ? openRouterTransform(body) : body) as Record<
+          string,
+          unknown
+        >,
+      ),
   });
 }
 
