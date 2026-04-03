@@ -55,10 +55,6 @@ function ensureApiKey() {
   }
 }
 
-function shouldStreamPrettyOutput(json: boolean) {
-  return process.stdout.isTTY && !json;
-}
-
 async function runStream(params: ReturnType<typeof createLocalExecutionContext>) {
   const stream = await runStreamRequest(params);
   await streamPretty({
@@ -140,7 +136,7 @@ async function main() {
     console.error(warning);
   }
 
-  if (shouldStreamPrettyOutput(parsed.options.json)) {
+  if (!parsed.options.json) {
     await runStream(runParams);
     return;
   }
