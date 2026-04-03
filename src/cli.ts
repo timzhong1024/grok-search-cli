@@ -1,9 +1,12 @@
 import { generateText, streamText } from "ai";
 import { parseArgs, fail } from "./args";
 import {
-  CUSTOM_BASE_URL,
+  CONFIG_PATH,
+  ensureUserConfigFile,
+  getApiKey,
   getApiMode,
   getBaseUrl,
+  getConfigDoctorSnapshot,
   getProviderKind,
   getRequestApiLabel,
   isOpenRouterBaseUrl,
@@ -26,20 +29,51 @@ import type {
   StreamResult,
 } from "./types";
 
+function printDoctor() {
+  const snapshot = getConfigDoctorSnapshot();
+
+  process.stdout.write("Doctor:\n");
+  process.stdout.write(`Config path: ${snapshot.configPath}\n`);
+  process.stdout.write(
+    `API key: ${snapshot.apiKeyPresent ? "present" : "missing"} (${snapshot.sources.apiKey})\n`,
+  );
+  process.stdout.write(`Model: ${snapshot.model} (${snapshot.sources.model})\n`);
+  process.stdout.write(
+    `Base URL: ${snapshot.baseUrl ?? "(xAI default)"} (${snapshot.sources.baseUrl})\n`,
+  );
+  process.stdout.write(
+    `Compat mode source: ${snapshot.sources.compatMode}\n`,
+  );
+  process.stdout.write(`Provider: ${snapshot.providerKind}\n`);
+  process.stdout.write(`API mode: ${snapshot.apiMode}\n`);
+  process.stdout.write(
+    `Status: ${snapshot.apiKeyPresent ? "OK" : "NOT READY"}\n`,
+  );
+
+  if (!snapshot.apiKeyPresent) {
+    const configPath = ensureUserConfigFile();
+    process.stdout.write(`Action: edit ${configPath}\n`);
+  }
+}
+
 function ensureApiKey() {
-  const apiKey = process.env.XAI_API_KEY?.trim();
+  const apiKey = getApiKey();
   if (!apiKey) {
-    fail("Missing XAI_API_KEY.");
+    const configPath = ensureUserConfigFile();
+    fail(
+      `Missing XAI_API_KEY.\n\nEdit ${configPath} or set XAI_API_KEY in your shell environment.\nThis CLI reads credentials from process.env first, then ${CONFIG_PATH}.`,
+    );
   }
 
   return apiKey;
 }
 
 function shouldWarnAboutCompatFilters(apiMode: ApiMode, options: Parameters<typeof hasToolSpecificOptions>[0]) {
+  const baseUrl = getBaseUrl();
   return (
     apiMode === "completion" &&
     hasToolSpecificOptions(options) &&
-    !isOpenRouterBaseUrl(CUSTOM_BASE_URL)
+    !isOpenRouterBaseUrl(baseUrl)
   );
 }
 
@@ -54,7 +88,7 @@ function shouldWarnAboutOpenRouterUnsupportedOptions(
 }
 
 function shouldUseOpenRouterResponses(apiMode: ApiMode) {
-  return getProviderKind(CUSTOM_BASE_URL) === "openrouter" && apiMode === "responses";
+  return getProviderKind(getBaseUrl()) === "openrouter" && apiMode === "responses";
 }
 
 function shouldStreamPrettyOutput(json: boolean) {
@@ -185,7 +219,7 @@ async function runStream(params: {
     ? await streamOpenRouterResponses({
         prompt: params.prompt,
         options: params.options,
-        baseUrl: params.baseUrl || CUSTOM_BASE_URL || "https://openrouter.ai/api/v1",
+        baseUrl: params.baseUrl || "https://openrouter.ai/api/v1",
         apiKey: params.apiKey,
         abortSignal: params.abortSignal,
       })
@@ -221,7 +255,7 @@ async function runOnce(params: {
     ? await fetchOpenRouterResponses({
         prompt: params.prompt,
         options: params.options,
-        baseUrl: params.baseUrl || CUSTOM_BASE_URL || "https://openrouter.ai/api/v1",
+        baseUrl: params.baseUrl || "https://openrouter.ai/api/v1",
         apiKey: params.apiKey,
         abortSignal: params.abortSignal,
       })
@@ -252,6 +286,11 @@ async function main() {
 
   if (parsed.command === "skill") {
     process.stdout.write(`${readSkillMarkdown()}\n`);
+    return;
+  }
+
+  if (parsed.command === "doctor") {
+    printDoctor();
     return;
   }
 
@@ -297,7 +336,7 @@ async function main() {
 void main().catch((error) => {
   const message =
     error instanceof Error ? error.stack || error.message : String(error);
-  printGatewayError(getProviderKind(CUSTOM_BASE_URL), getApiMode());
+  printGatewayError(getProviderKind(getBaseUrl()), getApiMode());
   process.stderr.write(`${message}\n`);
   process.exit(1);
 });

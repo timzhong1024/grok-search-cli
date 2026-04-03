@@ -1,4 +1,4 @@
-export type UtilityCommandName = "skill";
+export type UtilityCommandName = "skill" | "doctor";
 export type SearchCommandName = "all";
 export type CommandName = SearchCommandName | UtilityCommandName;
 export type ApiMode = "responses" | "completion";
@@ -21,6 +21,7 @@ export interface CliOptions {
 
 export type ParsedArgs =
   | { command: "skill" }
+  | { command: "doctor" }
   | { command: SearchCommandName; prompt: string; options: CliOptions };
 
 export interface UsageLike {

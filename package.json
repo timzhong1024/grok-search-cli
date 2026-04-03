@@ -28,7 +28,8 @@
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.38",
     "@ai-sdk/xai": "^3.0.77",
-    "ai": "^6.0.145"
+    "ai": "^6.0.145",
+    "conf": "^14.0.0"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.1",

@@ -1,12 +1,187 @@
+import { chmodSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import Conf from "conf";
 import type { ApiMode, ProviderKind } from "./types";
 
-export const DEFAULT_MODEL =
-  process.env.XAI_MODEL?.trim() || "grok-4-1-fast-non-reasoning";
-export const CUSTOM_BASE_URL = process.env.XAI_BASE_URL?.trim();
-const COMPAT_MODE_SETTING = process.env.XAI_COMPAT_MODE?.trim();
+const FALLBACK_MODEL = "grok-4-1-fast-non-reasoning";
+const CONFIG_DIR = path.join(os.homedir(), ".config", "grok-search-cli");
+interface UserConfig {
+  XAI_API_KEY?: string;
+  XAI_MODEL?: string;
+  XAI_BASE_URL?: string;
+  XAI_COMPAT_MODE?: boolean | string;
+  _examples?: {
+    xai: {
+      XAI_API_KEY: string;
+      XAI_MODEL: string;
+    };
+    openrouter: {
+      XAI_API_KEY: string;
+      XAI_MODEL: string;
+      XAI_BASE_URL: string;
+    };
+    yunwu: {
+      XAI_API_KEY: string;
+      XAI_MODEL: string;
+      XAI_BASE_URL: string;
+      XAI_COMPAT_MODE: boolean;
+    };
+  };
+}
+
+interface RuntimeConfig {
+  apiKey?: string;
+  model: string;
+  baseUrl?: string;
+  compatModeRaw?: boolean | string;
+}
+
+interface RuntimeConfigSources {
+  apiKey: "env" | "config" | "default" | "missing";
+  model: "env" | "config" | "default";
+  baseUrl: "env" | "config" | "default";
+  compatMode: "env" | "config" | "default";
+}
+
+function trimString(value: unknown) {
+  return typeof value === "string" ? value.trim() || undefined : undefined;
+}
+
+function createDefaultConfigTemplate(): UserConfig {
+  return {
+    XAI_API_KEY: "",
+    XAI_MODEL: FALLBACK_MODEL,
+    XAI_BASE_URL: "",
+    XAI_COMPAT_MODE: false,
+    _examples: {
+      xai: {
+        XAI_API_KEY: "your_xai_api_key",
+        XAI_MODEL: "grok-4-1-fast-non-reasoning",
+      },
+      openrouter: {
+        XAI_API_KEY: "your_openrouter_api_key",
+        XAI_MODEL: "x-ai/grok-4.1-fast",
+        XAI_BASE_URL: "https://openrouter.ai/api/v1",
+      },
+      yunwu: {
+        XAI_API_KEY: "your_yunwu_api_key",
+        XAI_MODEL: "grok-4-fast",
+        XAI_BASE_URL: "https://yunwu.ai/v1",
+        XAI_COMPAT_MODE: true,
+      },
+    },
+  };
+}
+
+function createUserConfigStore() {
+  try {
+    return new Conf<UserConfig>({
+      projectName: "grok-search-cli",
+      configName: "config",
+      cwd: CONFIG_DIR,
+      defaults: createDefaultConfigTemplate(),
+    });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    throw new Error(`Failed to initialize user config: ${message}`);
+  }
+}
+
+const userConfig = createUserConfigStore();
+export const CONFIG_PATH = userConfig.path;
+
+export function ensureUserConfigFile() {
+  mkdirSync(path.dirname(CONFIG_PATH), { recursive: true });
+
+  if (!existsSync(CONFIG_PATH)) {
+    writeFileSync(
+      CONFIG_PATH,
+      `${JSON.stringify(createDefaultConfigTemplate(), null, 2)}\n`,
+      "utf8",
+    );
+    try {
+      chmodSync(CONFIG_PATH, 0o600);
+    } catch {
+      // best-effort permission tightening
+    }
+  }
+
+  return CONFIG_PATH;
+}
+
+function getRuntimeConfig(): RuntimeConfig {
+  const fileConfig = userConfig.store;
+
+  return {
+    apiKey: trimString(process.env.XAI_API_KEY) ?? fileConfig?.XAI_API_KEY,
+    model:
+      trimString(process.env.XAI_MODEL) ??
+      fileConfig?.XAI_MODEL ??
+      FALLBACK_MODEL,
+    baseUrl:
+      trimString(process.env.XAI_BASE_URL) ??
+      fileConfig?.XAI_BASE_URL,
+    compatModeRaw:
+      process.env.XAI_COMPAT_MODE?.trim() ??
+      fileConfig?.XAI_COMPAT_MODE,
+  };
+}
+
+function getRuntimeConfigSources(): RuntimeConfigSources {
+  const fileConfig = userConfig.store;
+
+  return {
+    apiKey: trimString(process.env.XAI_API_KEY)
+      ? "env"
+      : fileConfig?.XAI_API_KEY
+        ? "config"
+        : "missing",
+    model: trimString(process.env.XAI_MODEL)
+      ? "env"
+      : fileConfig?.XAI_MODEL
+        ? "config"
+        : "default",
+    baseUrl: trimString(process.env.XAI_BASE_URL)
+      ? "env"
+      : fileConfig?.XAI_BASE_URL
+        ? "config"
+        : "default",
+    compatMode: process.env.XAI_COMPAT_MODE?.trim()
+      ? "env"
+      : fileConfig?.XAI_COMPAT_MODE != null
+        ? "config"
+        : "default",
+  };
+}
+
+export function getDefaultModel() {
+  return getRuntimeConfig().model;
+}
+
+export function getApiKey() {
+  return getRuntimeConfig().apiKey;
+}
 
 export function getBaseUrl() {
-  return CUSTOM_BASE_URL || undefined;
+  return getRuntimeConfig().baseUrl;
+}
+
+export function getConfigDoctorSnapshot() {
+  const runtimeConfig = getRuntimeConfig();
+  const sources = getRuntimeConfigSources();
+  const apiMode = getApiMode();
+  const providerKind = getProviderKind(runtimeConfig.baseUrl);
+
+  return {
+    configPath: CONFIG_PATH,
+    apiKeyPresent: Boolean(runtimeConfig.apiKey),
+    model: runtimeConfig.model,
+    baseUrl: runtimeConfig.baseUrl,
+    providerKind,
+    apiMode,
+    sources,
+  };
 }
 
 export function isOpenRouterBaseUrl(baseUrl: string | undefined) {
@@ -43,16 +218,20 @@ export function getProviderKind(baseUrl: string | undefined): ProviderKind {
   return "third-party";
 }
 
-export function getApiMode(): ApiMode {
-  const compatModeEnabled =
-    getProviderKind(CUSTOM_BASE_URL) !== "openrouter" &&
-    /^(1|true|yes|on)$/i.test(COMPAT_MODE_SETTING || "");
+function isCompatModeEnabled() {
+  const { compatModeRaw, baseUrl } = getRuntimeConfig();
+  return (
+    getProviderKind(baseUrl) !== "openrouter" &&
+    /^(1|true|yes|on)$/i.test(String(compatModeRaw || ""))
+  );
+}
 
-  return compatModeEnabled ? "completion" : "responses";
+export function getApiMode(): ApiMode {
+  return isCompatModeEnabled() ? "completion" : "responses";
 }
 
 export function getRequestApiLabel(apiMode: ApiMode) {
-  const providerKind = getProviderKind(CUSTOM_BASE_URL);
+  const providerKind = getProviderKind(getBaseUrl());
   if (providerKind === "openrouter" && apiMode === "responses") {
     return "OpenRouter Responses API Beta";
   }

@@ -1,7 +1,7 @@
 import { type ToolSet } from "ai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createXai, xai } from "@ai-sdk/xai";
-import { CUSTOM_BASE_URL, isOpenRouterBaseUrl } from "./config";
+import { getApiKey, getBaseUrl, isOpenRouterBaseUrl } from "./config";
 import { buildOpenRouterRequestTransform } from "./openrouter";
 import type { CliOptions } from "./types";
 
@@ -28,21 +28,23 @@ export function buildTools(options: CliOptions): ToolSet {
 }
 
 export function getResponsesProvider() {
-  if (!CUSTOM_BASE_URL) {
+  const baseUrl = getBaseUrl();
+  if (!baseUrl) {
     return xai;
   }
 
   return createXai({
-    baseURL: CUSTOM_BASE_URL,
+    baseURL: baseUrl,
   });
 }
 
 export function getCompletionProvider(options: CliOptions) {
+  const baseUrl = getBaseUrl();
   return createOpenAICompatible({
     name: "compat",
-    apiKey: process.env.XAI_API_KEY?.trim(),
-    baseURL: CUSTOM_BASE_URL || "https://api.x.ai/v1",
-    transformRequestBody: isOpenRouterBaseUrl(CUSTOM_BASE_URL)
+    apiKey: getApiKey(),
+    baseURL: baseUrl || "https://api.x.ai/v1",
+    transformRequestBody: isOpenRouterBaseUrl(baseUrl)
       ? buildOpenRouterRequestTransform(options)
       : undefined,
   });

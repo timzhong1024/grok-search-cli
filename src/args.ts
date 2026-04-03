@@ -1,4 +1,4 @@
-import { DEFAULT_MODEL } from "./config";
+import { getDefaultModel } from "./config";
 import type { CliOptions, ParsedArgs } from "./types";
 
 function fail(message: string): never {
@@ -7,14 +7,17 @@ function fail(message: string): never {
 }
 
 function printHelp() {
+  const defaultModel = getDefaultModel();
   process.stdout.write(`\
 Usage:
   grok-search "<prompt>" [options]
+  grok-search doctor
   grok-search skill
 
 Options:
+  doctor                          Show config and credential diagnostics
   skill                           Print the bundled skill to stdout
-  --model=<id>                    Override model. Default: ${DEFAULT_MODEL}
+  --model=<id>                    Override model. Default: ${defaultModel}
   --timeout=<seconds>             Request timeout. Default: 60
   --json                          Output JSON
   --verbose                       Print request and token diagnostics
@@ -55,7 +58,7 @@ function takeOptionValue(rawArg: string, args: string[], index: number) {
 
 function createDefaultOptions(): CliOptions {
   return {
-    model: DEFAULT_MODEL,
+    model: getDefaultModel(),
     timeoutMs: 60_000,
     json: false,
     verbose: false,
@@ -241,8 +244,23 @@ export function parseArgs(argv: string[]): ParsedArgs {
     return { command: "skill" };
   }
 
+  if (argv[0] === "doctor") {
+    const unknownOptions = argv.filter(
+      (arg, index) =>
+        index > 0 &&
+        arg.startsWith("-") &&
+        arg !== "--help" &&
+        arg !== "-h",
+    );
+
+    if (unknownOptions.length > 0) {
+      fail(`Unknown option: ${unknownOptions[0]}`);
+    }
+
+    return { command: "doctor" };
+  }
+
   return parseSearchArgs(argv);
 }
 
 export { fail };
-

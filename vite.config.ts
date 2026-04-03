@@ -17,6 +17,7 @@ export default defineConfig({
         "ai",
         "@ai-sdk/xai",
         "@ai-sdk/openai-compatible",
+        "conf",
       ],
       output: {
         banner: "#!/usr/bin/env node",
