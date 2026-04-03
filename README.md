@@ -49,7 +49,7 @@ This repo ships with an installable skill:
 npx skills add <owner>/<repo> --skill grok-search-cli
 ```
 
-For Codex, use it as a research-agent preset: `gpt-5.4-mini` with `low` reasoning. See [skills/grok-search-cli/agents/codex.md](/Users/timzhong/grok-search-cli/skills/grok-search-cli/agents/codex.md).
+For Codex, use it as a research-agent preset: `gpt-5.4-mini` with `low` reasoning. See [agents/codex.yaml](./agents/codex.yaml).
 
 Trigger it with:
 

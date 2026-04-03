@@ -1,0 +1,7 @@
+name: grok-research
+agent_type: researcher
+model: gpt-5.4-mini
+reasoning_effort: low
+description: >
+  Research-focused Codex preset for high-freshness web and X search through the
+  grok-search CLI.

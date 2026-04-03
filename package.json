@@ -9,9 +9,14 @@
     "grok-search": "./dist/cli.js"
   },
   "files": [
+    "agents",
     "dist",
     "skills",
-    "README.md"
+    "README.md",
+    "README.zh.md",
+    ".env.example",
+    ".env.openrouter.example",
+    ".env.yunwu.example"
   ],
   "scripts": {
     "build": "vite build",

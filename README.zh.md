@@ -49,7 +49,7 @@ XAI_MODEL=x-ai/grok-4-fast:online
 npx skills add <owner>/<repo> --skill grok-search-cli
 ```
 
-如果是 Codex，推荐把它当成一个 research agent 约定来用：默认 `gpt-5.4-mini` + `low` reasoning，见 [skills/grok-search-cli/agents/codex.md](/Users/timzhong/grok-search-cli/skills/grok-search-cli/agents/codex.md)。
+如果是 Codex，推荐把它当成一个 research agent 约定来用：默认 `gpt-5.4-mini` + `low` reasoning，见 [agents/codex.yaml](./agents/codex.yaml)。
 
 可直接用这句触发：
 
