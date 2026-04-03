@@ -1,0 +1,35 @@
+{
+  "name": "grok-search-cli",
+  "version": "0.1.0",
+  "description": "CLI for xAI webSearch and xSearch via the Vercel AI SDK provider.",
+  "license": "MIT",
+  "type": "module",
+  "packageManager": "pnpm@10.33.0",
+  "bin": {
+    "grok-search": "./dist/cli.js"
+  },
+  "files": [
+    "dist",
+    "skills",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "vite build",
+    "dev": "dotenvx run -f .env -- tsx src/cli.ts"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "@ai-sdk/openai-compatible": "^2.0.38",
+    "@ai-sdk/xai": "^3.0.77",
+    "ai": "^6.0.145"
+  },
+  "devDependencies": {
+    "@dotenvx/dotenvx": "^1.51.1",
+    "@types/node": "^24.5.2",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.2",
+    "vite": "^8.0.3"
+  }
+}
