@@ -2,19 +2,29 @@
 
 [English](./README.md)
 
-把 xAI 的 Web + X 联合搜索能力暴露成一个通用 CLI，给只能调用命令行的 agent 用。适合那种既要看实时网页结果、又要看 X 讨论、还希望模型顺手做一轮综合判断的 prompt。
+[![awesome for agents](https://img.shields.io/badge/awesome-for_agents-ff6b35)](https://github.com/timzhong1024/grok-search-cli)
+[![npm version](https://img.shields.io/npm/v/grok-search-cli)](https://www.npmjs.com/package/grok-search-cli)
+[![npm downloads](https://img.shields.io/npm/dm/grok-search-cli)](https://www.npmjs.com/package/grok-search-cli)
+[![license: MIT](https://img.shields.io/badge/license-MIT-green.svg)](./LICENSE)
+[![node >= 22](https://img.shields.io/badge/node-%3E%3D22-339933)](https://nodejs.org/)
 
-## 跑起来
+把 Grok 对 X 以及 GitHub、arXiv 等高价值公开数据源的访问能力，带到任何 agent 和 shell 工作流里。
 
-最小依赖只有两件事：装包，然后提供凭证。
+这个 CLI 让这套能力可以直接用于 agent 工作流：在处理快速变化的话题时，更容易获得更新鲜的信息，同时显著降低自建和维护搜索能力的成本。
+
+## 快速开始
+
+先安装：
 
 ```bash
+# 全局安装 CLI
 pnpm add -g grok-search-cli
 ```
 
-先做一次健康检查：
+然后做一次健康检查：
 
 ```bash
+# 检查当前配置是否可用
 grok-search doctor
 ```
 
@@ -24,7 +34,7 @@ grok-search doctor
 ~/.config/grok-search-cli/config.json
 ```
 
-打开这个文件，按内置示例填一套即可。默认的 xAI 官方配置长这样：
+打开这个文件，并按内置示例更新配置。默认的 xAI 官方配置如下：
 
 ```json
 {
@@ -35,43 +45,69 @@ grok-search doctor
 }
 ```
 
-然后直接跑：
+然后执行查询：
 
 ```bash
+# 先跑一个最基本的搜索
 grok-search "latest xAI updates"
 ```
 
-如果不想全局安装：
+如果不想全局安装，也可以通过 `npx` 运行：
 
 ```bash
+# 不全局安装，直接用 npx 运行
 npx grok-search-cli doctor
 npx grok-search-cli "latest xAI updates"
 ```
 
-如果走 OpenRouter，可以直接这样配：
+## 可以怎么搜
 
-```env
-XAI_API_KEY=your_openrouter_api_key
-XAI_BASE_URL=https://openrouter.ai/api/v1
-XAI_MODEL=x-ai/grok-4-fast:online
+```bash
+# 看看现在 X 上都在怎么讨论 xAI
+grok-search "现在 X 上大家都在怎么讨论 xAI？"
 ```
 
-如果走 yunwu.ai，可以直接这样配：
-
-```env
-XAI_API_KEY=your_yunwu_api_key
-XAI_BASE_URL=https://yunwu.ai/v1
-XAI_MODEL=grok-4-fast
-XAI_COMPAT_MODE=true
+```bash
+# 验证一个刚出现的说法是不是真的
+grok-search "有人说 xAI 今天开源了某个模型，这是真的吗？"
 ```
 
-`process.env` 的优先级高于 `~/.config/grok-search-cli/config.json`，所以临时覆盖配置时，直接在 shell 里传 env 就行。
+```bash
+# 一次找论文和 GitHub 项目
+grok-search "找最新的 browser-use agents 相关 arXiv 论文和 GitHub 项目"
+```
+
+```bash
+# 把网页搜索限制在指定站点
+grok-search "latest AI SDK updates" \
+  --allowed-domains=ai-sdk.dev,vercel.com
+```
+
+```bash
+# 按账号和日期限制 X 搜索范围
+grok-search "latest xAI status on X" \
+  --allowed-handles=xai,elonmusk \
+  --from-date=2026-04-01
+```
+
+```bash
+# 返回适合 agent 消费的 JSON
+grok-search "latest xAI updates" --json
+```
+
+## 为什么用它
+
+- 查“现在发生了什么”，而不是赌模型记忆有没有过时
+- 一次调用同时看网页和 X
+- 终端可直接读，agent 也能吃 JSON
+- 可接 xAI、OpenRouter 和兼容代理站
 
 ## 给 Agent 用
 
 这个仓库自带一个可安装 skill：
 
 ```bash
+# 用 skills CLI 安装仓库自带的 skill
 npx skills add timzhong1024/grok-search-cli --skill grok-search-cli
 ```
 
@@ -83,7 +119,51 @@ npx skills add timzhong1024/grok-search-cli --skill grok-search-cli
 Spawn a grok-research researcher agent with gpt-5.4-mini and low reasoning, then use grok-search for high-freshness web+X research.
 ```
 
-## 服务推荐
+内置 skill 也可以直接打印到 `stdout` 后手动安装：
+
+```bash
+# 把内置 skill 打印出来并手动保存
+grok-search skill > ~/.codex/skills/grok-search-cli/SKILL.md
+```
+
+## 配置方式
+
+`process.env` 的优先级高于 `~/.config/grok-search-cli/config.json`，因此在临时覆盖配置时，优先使用 shell 环境变量。
+
+### xAI 官方
+
+```json
+{
+  "XAI_API_KEY": "your_xai_api_key",
+  "XAI_MODEL": "grok-4-1-fast-non-reasoning",
+  "XAI_BASE_URL": "",
+  "XAI_COMPAT_MODE": false
+}
+```
+
+### OpenRouter
+
+```json
+{
+  "XAI_API_KEY": "your_openrouter_api_key",
+  "XAI_MODEL": "x-ai/grok-4-fast:online",
+  "XAI_BASE_URL": "https://openrouter.ai/api/v1",
+  "XAI_COMPAT_MODE": false
+}
+```
+
+### yunwu / 其他兼容代理站
+
+```json
+{
+  "XAI_API_KEY": "your_proxy_api_key",
+  "XAI_MODEL": "grok-4-fast",
+  "XAI_BASE_URL": "https://yunwu.ai/v1",
+  "XAI_COMPAT_MODE": true
+}
+```
+
+## 服务选择建议
 
 推荐顺序：
 
@@ -91,79 +171,46 @@ Spawn a grok-research researcher agent with gpt-5.4-mini and low reasoning, then
 2. OpenRouter 也比较稳。它对 xAI 模型可以走原生 xAI 支持的 web search。
 3. 如果使用第三方代理站，需要自己确认搜索能力。很多代理站只暴露 `/chat/completions`，是否真的能搜索，取决于站点是否在内部为你开启了 web search。
 
-## 两种模式
+## 搜索模式
 
-### xAI 官方模式
+### xAI 官方
 
-直接连 xAI 官方 API，使用 Responses API，并同时注册：
+直接连接 xAI 官方服务时使用。
 
-- `xai.tools.webSearch()`
-- `xai.tools.xSearch()`
+- 同时支持 Web Search 和 X Search
+- 支持网页域名过滤、X 账号过滤、日期过滤，以及图片或视频理解选项
+- 这是能力最完整的模式
 
-这是能力最完整的模式。
+### OpenRouter
 
-### 中转站模式
+当 `XAI_BASE_URL` 指向 `openrouter.ai` 时使用。
 
-如果你的 API 中转站只支持 OpenAI 风格的 `/chat/completions`，就打开兼容模式：
+- 支持通过 OpenRouter 的服务端搜索工具进行网页搜索
+- 只支持网页域名过滤
+- **不支持**配置 X 专属配置，例如账号、日期、以及图片或视频理解选项
 
-```env
-XAI_BASE_URL=https://your-proxy.example.com/v1
-XAI_COMPAT_MODE=true
-```
+### 其他兼容网关
 
-这时 CLI 会改走 completion 调用，不再显式注册 xAI tools。
+当你通过其他 OpenAI-compatible 网关接入，并启用 `XAI_COMPAT_MODE=true` 时使用。
 
-如果 `XAI_BASE_URL` 指向 OpenRouter，CLI 会走 OpenRouter 的 Responses API，并按 OpenRouter 的 web search 请求字段发送参数。
-
-兼容模式下：
-
+- 使用网关提供的兼容调用路径
 - 是否真的搜索、怎么搜索，由中转站决定
-- `--allowed-domains`、`--allowed-handles`、`--from-date` 这类 tool 参数不会下传；如果传了，CLI 会打印 warning
+- 不支持所有搜索高级配置
 
-## 常用命令
-
-```bash
-grok-search "现在 X 上大家都在怎么讨论 xAI？"
-```
+## CLI 参考
 
 ```bash
-grok-search "有人说 xAI 今天开源了某个模型，这是真的吗？"
-```
-
-```bash
-grok-search "找最新的 browser-use agents 相关 arXiv 论文和 GitHub 项目"
-```
-
-```bash
-grok-search "latest AI SDK updates" \
-  --allowed-domains=ai-sdk.dev,vercel.com
-```
-
-```bash
-grok-search "latest xAI status on X" \
-  --allowed-handles=xai,elonmusk \
-  --from-date=2026-04-01
-```
-
-```bash
-grok-search "latest xAI updates" --json
-```
-
-```bash
+# 检查当前配置是否可用
 grok-search doctor
 ```
 
 ```bash
+# 把内置 skill 打印到 stdout
 grok-search skill
 ```
 
-这个命令会把内置 skill 直接打印到 `stdout`，所以也可以重定向保存：
-
 ```bash
-grok-search skill > ~/.codex/skills/grok-search-cli/SKILL.md
-```
-
-```bash
+# 查看完整命令帮助
 grok-search --help
 ```
 
@@ -172,6 +219,7 @@ grok-search --help
 本地如果要走 `.env`，`pnpm dev` 已经默认走 `dotenvx`：
 
 ```bash
+# 开发时通过 dotenvx 运行 TypeScript 入口
 pnpm install
 pnpm dev "latest xAI updates" --verbose
 ```
