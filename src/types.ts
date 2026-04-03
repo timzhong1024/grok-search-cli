@@ -23,7 +23,7 @@ export interface CliOptions extends SearchOptions {
 }
 
 export interface GrokSearchConfig {
-  apiKey?: string;
+  apiKey: string;
   model?: string;
   baseUrl?: string;
   compatMode?: boolean | string;
