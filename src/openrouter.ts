@@ -1,13 +1,13 @@
 import type {
-  CliOptions,
   CompletedResult,
   OpenRouterResponsesBody,
   OpenRouterResponsesUsage,
+  SearchOptions,
   StreamResult,
   UsageLike,
 } from "./types";
 
-function buildOpenRouterPlugin(options: CliOptions) {
+function buildOpenRouterPlugin(options: SearchOptions) {
   const parameters: Record<string, unknown> = {};
 
   if (options.allowedDomains.length > 0) {
@@ -29,7 +29,7 @@ function hasKeys(value: Record<string, unknown>) {
 
 export function buildOpenRouterResponsesBody(
   prompt: string,
-  options: CliOptions,
+  options: SearchOptions,
   stream: boolean,
 ) {
   const body: Record<string, unknown> = {
@@ -112,7 +112,7 @@ async function postOpenRouterResponses(params: {
   return expectOpenRouterResponse(response);
 }
 
-export function buildOpenRouterRequestTransform(options: CliOptions) {
+export function buildOpenRouterRequestTransform(options: SearchOptions) {
   return (body: Record<string, unknown>) => {
     return {
       ...body,
@@ -160,7 +160,7 @@ export function parseOpenRouterSseLine(line: string): OpenRouterStreamEvent {
 
 export async function fetchOpenRouterResponses(params: {
   prompt: string;
-  options: CliOptions;
+  options: SearchOptions;
   baseUrl: string;
   apiKey: string;
   abortSignal: AbortSignal;
@@ -177,7 +177,7 @@ export async function fetchOpenRouterResponses(params: {
 
 export async function streamOpenRouterResponses(params: {
   prompt: string;
-  options: CliOptions;
+  options: SearchOptions;
   baseUrl: string;
   apiKey: string;
   abortSignal: AbortSignal;

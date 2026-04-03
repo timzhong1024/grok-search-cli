@@ -4,10 +4,9 @@ export type CommandName = SearchCommandName | UtilityCommandName;
 export type ApiMode = "responses" | "completion";
 export type ProviderKind = "xai" | "openrouter" | "third-party";
 
-export interface CliOptions {
+export interface SearchOptions {
   model: string;
   timeoutMs: number;
-  json: boolean;
   verbose: boolean;
   allowedDomains: string[];
   excludedDomains: string[];
@@ -17,6 +16,27 @@ export interface CliOptions {
   toDate?: string;
   enableImageUnderstanding: boolean;
   enableVideoUnderstanding: boolean;
+}
+
+export interface CliOptions extends SearchOptions {
+  json: boolean;
+}
+
+export interface GrokSearchConfig {
+  apiKey?: string;
+  model?: string;
+  baseUrl?: string;
+  compatMode?: boolean | string;
+  timeoutMs?: number;
+  verbose?: boolean;
+  allowedDomains?: string[];
+  excludedDomains?: string[];
+  allowedHandles?: string[];
+  excludedHandles?: string[];
+  fromDate?: string;
+  toDate?: string;
+  enableImageUnderstanding?: boolean;
+  enableVideoUnderstanding?: boolean;
 }
 
 export type ParsedArgs =

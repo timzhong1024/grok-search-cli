@@ -6,9 +6,12 @@ export default defineConfig({
     outDir: "dist",
     emptyOutDir: true,
     lib: {
-      entry: "src/cli.ts",
+      entry: {
+        cli: "src/cli.ts",
+        index: "src/index.ts",
+      },
       formats: ["es"],
-      fileName: () => "cli.js",
+      fileName: (_format, entryName) => `${entryName}.js`,
     },
     rollupOptions: {
       external: [
@@ -20,7 +23,10 @@ export default defineConfig({
         "conf",
       ],
       output: {
-        banner: "#!/usr/bin/env node",
+        banner: (chunk) =>
+          chunk.facadeModuleId?.endsWith("/src/cli.ts")
+            ? "#!/usr/bin/env node"
+            : "",
       },
     },
   },

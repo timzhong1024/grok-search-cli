@@ -2,7 +2,7 @@ import { chmodSync, existsSync, mkdirSync, writeFileSync } from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import Conf from "conf";
-import type { ApiMode, ProviderKind } from "./types";
+import type { ApiMode, GrokSearchConfig, ProviderKind } from "./types";
 
 const FALLBACK_MODEL = "grok-4-1-fast-non-reasoning";
 const CONFIG_DIR = path.join(os.homedir(), ".config", "grok-search-cli");
@@ -128,6 +128,19 @@ function getRuntimeConfig(): RuntimeConfig {
   };
 }
 
+export function resolveRuntimeConfig(config?: GrokSearchConfig): RuntimeConfig {
+  if (config) {
+    return {
+      apiKey: trimString(config.apiKey),
+      model: trimString(config.model) ?? FALLBACK_MODEL,
+      baseUrl: trimString(config.baseUrl),
+      compatModeRaw: config.compatMode,
+    };
+  }
+
+  return getRuntimeConfig();
+}
+
 function getRuntimeConfigSources(): RuntimeConfigSources {
   const fileConfig = userConfig.store;
 
@@ -156,15 +169,15 @@ function getRuntimeConfigSources(): RuntimeConfigSources {
 }
 
 export function getDefaultModel() {
-  return getRuntimeConfig().model;
+  return resolveRuntimeConfig().model;
 }
 
 export function getApiKey() {
-  return getRuntimeConfig().apiKey;
+  return resolveRuntimeConfig().apiKey;
 }
 
 export function getBaseUrl() {
-  return getRuntimeConfig().baseUrl;
+  return resolveRuntimeConfig().baseUrl;
 }
 
 export function getConfigDoctorSnapshot() {
@@ -218,20 +231,23 @@ export function getProviderKind(baseUrl: string | undefined): ProviderKind {
   return "third-party";
 }
 
-function isCompatModeEnabled() {
-  const { compatModeRaw, baseUrl } = getRuntimeConfig();
+export function isCompatModeEnabled(config?: GrokSearchConfig) {
+  const { compatModeRaw, baseUrl } = resolveRuntimeConfig(config);
   return (
     getProviderKind(baseUrl) !== "openrouter" &&
     /^(1|true|yes|on)$/i.test(String(compatModeRaw || ""))
   );
 }
 
-export function getApiMode(): ApiMode {
-  return isCompatModeEnabled() ? "completion" : "responses";
+export function getApiMode(config?: GrokSearchConfig): ApiMode {
+  return isCompatModeEnabled(config) ? "completion" : "responses";
 }
 
-export function getRequestApiLabel(apiMode: ApiMode) {
-  const providerKind = getProviderKind(getBaseUrl());
+export function getRequestApiLabel(
+  apiMode: ApiMode,
+  baseUrl = getBaseUrl(),
+) {
+  const providerKind = getProviderKind(baseUrl);
   if (providerKind === "openrouter" && apiMode === "responses") {
     return "OpenRouter Responses API Beta";
   }

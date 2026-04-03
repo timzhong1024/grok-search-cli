@@ -1,11 +1,16 @@
 import { type ToolSet } from "ai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
 import { createXai, xai } from "@ai-sdk/xai";
-import { getApiKey, getBaseUrl, isOpenRouterBaseUrl } from "./config";
+import { isOpenRouterBaseUrl } from "./config";
 import { buildOpenRouterRequestTransform } from "./openrouter";
-import type { CliOptions } from "./types";
+import type { SearchOptions } from "./types";
 
-export function buildTools(options: CliOptions): ToolSet {
+interface ProviderRuntimeConfig {
+  apiKey?: string;
+  baseUrl?: string;
+}
+
+export function buildTools(options: SearchOptions): ToolSet {
   return {
     web_search: xai.tools.webSearch({
       allowedDomains:
@@ -27,8 +32,8 @@ export function buildTools(options: CliOptions): ToolSet {
   };
 }
 
-export function getResponsesProvider() {
-  const baseUrl = getBaseUrl();
+export function getResponsesProvider(runtimeConfig: ProviderRuntimeConfig) {
+  const { baseUrl } = runtimeConfig;
   if (!baseUrl) {
     return xai;
   }
@@ -38,11 +43,14 @@ export function getResponsesProvider() {
   });
 }
 
-export function getCompletionProvider(options: CliOptions) {
-  const baseUrl = getBaseUrl();
+export function getCompletionProvider(
+  runtimeConfig: ProviderRuntimeConfig,
+  options: SearchOptions,
+) {
+  const { baseUrl, apiKey } = runtimeConfig;
   return createOpenAICompatible({
     name: "compat",
-    apiKey: getApiKey(),
+    apiKey,
     baseURL: baseUrl || "https://api.x.ai/v1",
     transformRequestBody: isOpenRouterBaseUrl(baseUrl)
       ? buildOpenRouterRequestTransform(options)
@@ -50,7 +58,7 @@ export function getCompletionProvider(options: CliOptions) {
   });
 }
 
-export function hasToolSpecificOptions(options: CliOptions) {
+export function hasToolSpecificOptions(options: SearchOptions) {
   return (
     options.allowedDomains.length > 0 ||
     options.excludedDomains.length > 0 ||
@@ -63,7 +71,7 @@ export function hasToolSpecificOptions(options: CliOptions) {
   );
 }
 
-export function hasOpenRouterUnsupportedSearchOptions(options: CliOptions) {
+export function hasOpenRouterUnsupportedSearchOptions(options: SearchOptions) {
   return (
     options.allowedHandles.length > 0 ||
     options.excludedHandles.length > 0 ||
