@@ -14,12 +14,17 @@ Usage:
   grok-search doctor
   grok-search skill
 
-Options:
+Commands:
   doctor                          Show config and credential diagnostics
   skill                           Print the bundled skill to stdout
+
+Options:
   --model=<id>                    Override model. Default: ${defaultModel}
   --timeout=<seconds>             Request timeout. Default: 60
-  --json                          Output JSON
+  -h, --help                      Show this help
+
+Advanced Options:
+  Most of these are optional and usually not needed for normal research.
   --verbose                       Print request and token diagnostics
   --allowed-domains=a.com,b.com   Web Search allowed domains
   --excluded-domains=a.com,b.com  Web Search excluded domains
@@ -29,7 +34,7 @@ Options:
   --to-date=YYYY-MM-DD            X Search end date
   --image                         Enable image understanding
   --video                         Enable video understanding for X Search
-  -h, --help                      Show this help
+  --json                          Output JSON instead of the default text stream
 
 Environment:
   XAI_API_KEY                     Required
