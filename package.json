@@ -1,6 +1,6 @@
 {
   "name": "grok-search-cli",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "AI-friendly CLI for high-freshness web and X research with Grok search tool.",
   "keywords": [
     "agent",
