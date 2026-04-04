@@ -1,6 +1,13 @@
 import { defineConfig } from "vite";
+import dts from "vite-plugin-dts";
 
 export default defineConfig({
+  plugins: [
+    dts({
+      tsconfigPath: "./tsconfig.json",
+      outDir: "dist",
+    }),
+  ],
   build: {
     target: "node22",
     outDir: "dist",
