@@ -53,15 +53,15 @@
   "dependencies": {
     "@ai-sdk/openai-compatible": "^2.0.38",
     "@ai-sdk/xai": "^3.0.77",
-    "ai": "^6.0.145",
-    "conf": "^14.0.0",
+    "ai": "^6.0.146",
+    "conf": "^15.1.0",
     "p-defer": "^4.0.1"
   },
   "devDependencies": {
     "@dotenvx/dotenvx": "^1.51.1",
-    "@types/node": "^24.5.2",
+    "@types/node": "^25.5.2",
     "tsx": "^4.20.6",
-    "typescript": "^5.9.2",
+    "typescript": "^6.0.2",
     "vite": "^8.0.3",
     "vite-plugin-dts": "^4.5.4"
   }
